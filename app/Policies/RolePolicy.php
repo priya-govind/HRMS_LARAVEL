@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\User;
+
+class RolePolicy
+{
+    /**
+     * Create a new policy instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+    public function accessDashboard(User $user, $role)
+    {
+        return $user->roles()->pluck('folder')->contains($role);
+    }
+
+}

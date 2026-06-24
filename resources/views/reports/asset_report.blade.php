@@ -1,0 +1,144 @@
+@extends('layouts.app')
+@section('content')
+      
+      <!-- partial:partials/_navbar.html -->
+      @include('layouts.includes.topbar')
+     
+      <!-- partial -->
+      <div class="container-fluid page-body-wrapper">
+        <!-- partial:partials/_sidebar.html -->
+        @include('layouts.includes.sidebar')
+        
+        <!-- partial -->
+        <div class="main-panel">
+        <div class="content-wrapper">
+            <div class="row justify-content-center mt-4">
+          <div class="col-md-12">
+              <div class="card shadow-sm">
+                <div class="card-header text-white" style="background-color: #215dab">
+                  <h5 class="mb-0">Export Assets Report</h5>
+                </div>
+                <div class="card-body">
+                  <form  id="assetReport">
+                    @csrf
+                    <div class="row form-row align-items-start">
+                      <div class="form-group col-md-2">
+                          <label for="teamType">Item Type</label>
+                            <select name="item_type" id="item_type" class="form-control">
+                                <option value="">Select</option>
+                                <option value="asset">Asset</option>               
+                                <option value="accessory">Accessory</option>
+                                <option value="components">Components</option>
+                                <option value="licenses">Licenses</option>
+                            </select>
+                      </div>
+                       <div class="form-group col-md-2">
+                          <label for="teamType">Item Category</label>
+                            <select name="item_category" id="item_category" class="form-control">
+                                <option value="">Select</option>
+                                    @foreach($itemTypes as $itid =>$itval)
+                                        <option value="{{ $itid }}">{{ $itval }}</option>
+                                    @endforeach
+                            </select>
+                      </div>
+                      <div class="form-group col-md-2">
+                          <label for="teamType">Brand</label>
+                            <select class="form-control" id="brand" name="brand">
+                              <option value="">Select Brand</option>
+                                @foreach ($BrandTypes as $id =>$brand)
+                                  <option value="{{ $id  }}" {{ request('brand') == $id ? 'selected' : '' }}>{{ $brand }}</option>
+                                @endforeach
+                            </select>
+                      </div>
+                      <div class="form-group col-md-2">
+                          <label for="teamType">Assigned Employees</label>
+                            <select class="form-control" id="user_id" name="user_id">
+                              <option value="">Select Employee</option>
+                                @foreach ($user_info as $id =>$u_name)
+                                  <option value="{{ $id  }}" {{ request('user_id') == $id ? 'selected' : '' }}>{{ $u_name }}</option>
+                                @endforeach
+                            </select>
+                      </div>
+                      
+                      <div class="form-group col-md-2 d-flex align-items-end" style="margin: 23px 0 0 0;">
+                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                      </div>
+                    <div class="form-group col-md-2" style="margin: 23px 0 0 0;">
+                          <button class="btn btn-primary download_tasks">Export to excel 
+                            <i class="fa fa-download" aria-hidden="true"></i>
+                          </button>
+                    </div>
+                    </div>
+                  </form>
+                  <table id="assetReportTable" class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>S.no</th>
+                        <th>Item Type</th>
+                        <th>Item Category</th>
+                        <th>Brand Name</th>
+                        <th>Item Name</th>
+                        <th>Serial Number</th>
+                        <th>Assigned Employee Name</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              
+          </div>
+           
+
+            </div>
+        </div>
+
+     <script src="{{ asset('assets/js/assetitem.js') }}"></script>
+   <script>
+$(document).ready(function () {
+let table = $('#assetReportTable').DataTable({
+  processing: true,
+  serverSide: true,
+  ajax: {
+    url: "{{ route('asset_report_action') }}",
+    type: "POST",
+    data: function(d) {
+      d._token = "{{ csrf_token() }}";
+      d.item_type = $('#item_type').val();
+      d.item_category = $('#item_category').val();
+      d.brand = $('#brand').val();
+      d.user_id = $('#user_id').val();
+    }
+  },
+  columns: [
+    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+    { data: 'item_type', name: 'item_type' },
+    { data: 'item_category', name: 'item_category' },
+    { data: 'item_brand', name: 'item_brand' },
+    { data: 'item_name', name: 'item_name' },
+    { data: 'serial_number', name: 'serial_number' },
+    { data: 'assigned_employee', name: 'assigned_employee' }
+  ]
+});
+});
+  $('#assetReport').on('submit', function(e) {
+  e.preventDefault(); // Prevent default form submission
+  $('#assetReportTable').DataTable().ajax.reload(); // Reload DataTable with new filters
+});
+   $('.download_tasks').on('click',function(){
+    const item_type =  $('#item_type').val();
+    const item_category=$('#item_category').val();
+    const brand = $('#brand').val();
+    const user_id = $('#user_id').val();
+    const downloadUrl = `/asset_report_export?item_type=${item_type}&item_category=${item_category}&brand=${brand}&user_id=${user_id}`;
+   //alert(downloadUrl);
+    window.location.href = downloadUrl;
+    });
+</script>
+
+<style>
+  .form-control:disabled, .form-control:read-only {
+    background-color: white;
+  }
+</style>   
+          @endsection 
